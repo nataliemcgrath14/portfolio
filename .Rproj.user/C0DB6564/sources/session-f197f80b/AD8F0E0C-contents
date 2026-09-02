@@ -34,6 +34,8 @@ h3 { margin: 1.25rem 0 0.25rem; font-size: 1.1rem; }
 <p>mcgratne@miamioh.edu • GitHub: nataliemcgrath14 • LinkedIn: https://www.linkedin.com/in/natalie-mcgrath/</p>
 </header>
 <section>
+<h2>Education</h2>
+<strong>Miami University, Farmer School of Business</strong>, Bachelor of Science in Business, Marketing and Business Analytics <span class="meta">December 2026</span>
 <h2>About</h2>
 <p>I’m a Marketing major with a Business Analytics minor at Miami University, graduating in December 2026. I’m currently a Sales & Operations Intern at Integrity Express Logistics, where I’m learning how data, communication, and relationship-building drive business results. I’m interested in roles that blend sales, marketing, and analytics, and I enjoy turning insights into clear, actionable strategies. Outside of class, I’m involved in Professional Sales Club and Women in Marketing, where I’ve strengthened my leadership and project skills.</p>
 </section>
@@ -124,9 +126,8 @@ h3 { margin: 1.25rem 0 0.25rem; font-size: 1.1rem; }
 </article>
 </section>
 <section>
-<h2>Education</h2>
+
 <p>
-<strong>Miami University, Farmer School of Business</strong>, Bachelor of Science in Business, Marketing and Business Analytics <span class="meta">December 2026</span>
 </p>
 </section>
 </main>
