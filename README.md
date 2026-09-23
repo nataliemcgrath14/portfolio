@@ -16,12 +16,12 @@ https://midwest-airbnb-chat-hqlr.onrender.com/
 
 ### 1. What is the average nightly price in Chicago, Columbus, and the Twin Cities?
 
-![Answer to average nightly price question](images/AirbnbChat1.png)
+![Answer to average nightly price question](images/AirbnbChat01.png)
 
 ### 2. Which city has the highest average Airbnb rating?
 
-![Answer to average rating question](images/AirbnbChat2.png)
+![Answer to average rating question](images/AirbnbChat02.png)
 
 ### 3. What is the average nightly price for each room type in each city?
 
-![Answer to room type price question](images/AirbnbChat3.png)
+![Answer to room type price question](images/AirbnbChat03.png)
