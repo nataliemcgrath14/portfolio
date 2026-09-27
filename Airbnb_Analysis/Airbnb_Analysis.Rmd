@@ -1,0 +1,342 @@
+
+---
+title: "Midwest Airbnb Analysis"
+author: "Natalie McGrath"
+date: "2026-09-27"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_download: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+con = DBI::dbConnect(
+  RSQLite::SQLite(),
+  "C:/Users/natmc/OneDrive/Desktop/portfolio/apps/midwest_airbnb_chat/data/midwest_airbnb_extended.db"
+)
+
+listings = DBI::dbReadTable(con, "listings") |>
+  tibble::as_tibble()
+
+availability = DBI::dbReadTable(con, "availability_monthly") |>
+  tibble::as_tibble()
+
+reviews = DBI::dbReadTable(con, "reviews_monthly") |>
+  tibble::as_tibble()
+
+DBI::dbDisconnect(con)
+
+```
+
+## Question 1 
+```{r}
+# Count listings owned by each host
+host_counts = listings |>
+  dplyr::count(host_id, name = "listing_count")
+
+listings_with_counts = listings |>
+  dplyr::left_join(host_counts, by = "host_id")
+
+# A1: Number of hosts with 10 or more listings
+A1 = host_counts |>
+  dplyr::filter(listing_count >= 10) |>
+  dplyr::summarize(number_of_hosts = dplyr::n())
+
+# A2: Percentage of Chicago listings owned by those hosts
+A2 = listings_with_counts |>
+  dplyr::filter(city == "Chicago") |>
+  dplyr::summarize(
+    percentage = 100 * mean(listing_count >= 10)
+  )
+
+A1
+A2
+```
+Answer 1: How many hosts have 10 or more listings across all three cities? 198 Hosts 
+
+Answer 2: What percentage of Chicago's listings belong to these hosts? 31.89%
+
+## Question 2 
+```{r}
+# Filter listings that meet the requirements
+family_listings = listings |>
+  dplyr::filter(
+    room_type == "Entire home/apt",
+    accommodates >= 4,
+    number_of_reviews >= 10,
+    review_scores_rating >= 4.8
+  ) |>
+  dplyr::mutate(
+    price_per_person = price / accommodates
+  )
+
+# Calculate median price per person by neighborhood
+neighbourhood_values = family_listings |>
+  dplyr::group_by(city, neighbourhood) |>
+  dplyr::summarize(
+    median_price_per_person = median(price_per_person, na.rm = TRUE),
+    listing_count = dplyr::n(),
+    .groups = "drop"
+  ) |>
+  dplyr::filter(listing_count >= 20)
+
+# A3: Find the cheapest qualifying Columbus neighbourhood
+A3 = neighbourhood_values |>
+  dplyr::filter(city == "Columbus") |>
+  dplyr::arrange(median_price_per_person)
+
+A3
+```
+
+Answer 3: What is the the name of the Columbus neighbourhood with the lowest median price per person? North Linden, with a median price per person $32.55
+
+## Question 3 
+```{r}
+# Calculate median values by city and room type
+revenue_summary = listings |>
+  dplyr::group_by(city, room_type) |>
+  dplyr::summarize(
+    dplyr::across(
+      c(price, reviews_per_month, estimated_revenue_l365d),
+      ~ median(.x, na.rm = TRUE)
+    ),
+    .groups = "drop"
+  )
+
+# A4: Median revenue for Twin Cities entire homes
+A4 = revenue_summary |>
+  dplyr::filter(
+    city == "Twin Cities",
+    room_type == "Entire home/apt"
+  )
+
+A4
+```
+
+Answer 4: What is the median estimated revenue of Twin Cities in the entire homes category? 19619 
+
+## Question 4 
+```{r}
+# Rank listings by estimated revenue within each city
+ranked_listings = listings |>
+  dplyr::group_by(city) |>
+  dplyr::arrange(
+    dplyr::desc(estimated_revenue_l365d),
+    .by_group = TRUE
+  ) |>
+  dplyr::mutate(
+    top_10_percent = dplyr::row_number() <=
+      ceiling(0.10 * dplyr::n())
+  ) |>
+  dplyr::ungroup()
+
+# Calculate the revenue percentage for each city
+revenue_concentration = ranked_listings |>
+  dplyr::group_by(city) |>
+  dplyr::summarize(
+    top_revenue = sum(
+      estimated_revenue_l365d[top_10_percent],
+      na.rm = TRUE
+    ),
+    total_revenue = sum(
+      estimated_revenue_l365d,
+      na.rm = TRUE
+    ),
+    percentage = 100 * top_revenue / total_revenue,
+    .groups = "drop"
+  )
+
+# A5: Columbus
+A5 = revenue_concentration |>
+  dplyr::filter(city == "Columbus")
+
+A5
+```
+
+Answer 5: What is the percent of Columbus's total estimated revenue earned by its top 10 %? 36.08% 
+
+## Question 5 
+```{r}
+# Filter October 2026 availability
+october_availability = availability |>
+  dplyr::filter(month == "2026-10")
+
+october_homes = listings |>
+  dplyr::filter(room_type == "Entire home/apt") |>
+  dplyr::inner_join(
+    october_availability,
+    by = "id"
+  ) |>
+  dplyr::mutate(
+    mostly_taken = nights_available < 0.5 * nights_in_month
+  )
+
+# Calculate percentage of mostly-taken homes by city
+city_availability = october_homes |>
+  dplyr::group_by(city) |>
+  dplyr::summarize(
+    percentage = 100 * mean(mostly_taken, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  dplyr::arrange(percentage)
+
+# A6 and A7
+city_availability
+```
+
+
+Answer 6: What is the city with the lowest share of mostly taken entire homes? Columbus 
+
+
+Answer 7: What is that share percentage? 19.02%
+
+## Question 6 
+```{r}
+# Join reviews to listings and filter the date range
+monthly_reviews = reviews |>
+  dplyr::inner_join(
+    listings |> dplyr::select(id, city),
+    by = "id"
+  ) |>
+  dplyr::filter(
+    month >= "2025-07",
+    month <= "2026-06"
+  )
+
+# Total reviews per city and month
+city_monthly_reviews = monthly_reviews |>
+  dplyr::group_by(city, month) |>
+  dplyr::summarize(
+    total_reviews = sum(reviews, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Find the busiest and quietest Twin Cities months
+twin_cities_reviews = city_monthly_reviews |>
+  dplyr::filter(city == "Twin Cities") |>
+  dplyr::arrange(dplyr::desc(total_reviews))
+
+# A8: Busiest month
+A8 = twin_cities_reviews |>
+  dplyr::slice(1)
+
+# A9: Busiest-to-quietest ratio
+A9 = twin_cities_reviews |>
+  dplyr::summarize(
+    ratio = max(total_reviews) / min(total_reviews)
+  )
+
+A8
+A9
+```
+
+Answer 8: What is the Twin Citiies busiest month? August 
+
+
+Answer 9: What is the ratio of the busiest month to the quietest month? 2.37 to 1 ratio 
+
+## Question 7 
+```{r}
+# Filter entire homes with known Superhost status
+superhost_listings = listings |>
+  dplyr::filter(
+    room_type == "Entire home/apt",
+    host_is_superhost %in% c("t", "f")
+  )
+
+# Calculate median price and rating for each group
+superhost_summary = superhost_listings |>
+  dplyr::group_by(city, host_is_superhost) |>
+  dplyr::summarize(
+    median_price = median(price, na.rm = TRUE),
+    median_rating = median(review_scores_rating, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Calculate the Superhost price premium for each city
+B1 = superhost_summary |>
+  dplyr::select(city, host_is_superhost, median_price) |>
+  tidyr::pivot_wider(
+    names_from = host_is_superhost,
+    values_from = median_price
+  ) |>
+  dplyr::mutate(
+    premium = t - f
+  ) |>
+  dplyr::arrange(city)
+
+superhost_summary
+B1
+```
+
+Answer B1: 
+
+Chicago: 43.75
+Columbus: 40.50
+Twin Cities: -1.38
+
+## Question 8 
+```{r}
+# Find listings with no availability records
+missing_availability = listings |>
+  dplyr::anti_join(availability, by = "id")
+
+# A10: Count missing listings
+A10 = missing_availability |>
+  dplyr::summarize(
+    missing_listings = dplyr::n()
+  )
+
+# Find which city loses the most listings
+missing_by_city = missing_availability |>
+  dplyr::count(city, name = "missing_listings") |>
+  dplyr::arrange(dplyr::desc(missing_listings))
+
+A10
+missing_by_city
+```
+
+
+Answer 10: How many listings are under missing_listings? 456 
+
+README: Which city looses the most listings? Chicago with 267
+
+## B2 
+```{r}
+# Share of listings owned by hosts with 10+ listings
+listing_shares = listings_with_counts |>
+  dplyr::group_by(city) |>
+  dplyr::summarize(
+    listing_share = 100 * mean(listing_count >= 10),
+    .groups = "drop"
+  )
+
+# Revenue earned by each city's top 10% of listings
+revenue_shares = revenue_concentration |>
+  dplyr::select(city, percentage)
+
+
+B2 = listing_shares |>
+  dplyr::left_join(revenue_shares, by = "city") |>
+  dplyr::rename(
+    revenue_share = percentage
+  )
+
+B2
+```
+
+Answer B2: 
+
+Chicago 31.89 listing share 40.73 revenue share 
+
+Columbus 37.14 listing share 36.08 revenue share 
+
+Twin Cities 17.15 listing share 40.26 revenue share 
