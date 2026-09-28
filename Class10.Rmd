@@ -1,0 +1,75 @@
+---
+title: "Class10"
+author: "Natalie McGrath"
+date: "2026-09-28"
+output: html_document:
+    toc:TRUE 
+    toc_float: TRUE 
+    number_sections: TRUE 
+    code_download: TRUE 
+    code_folding: show 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Robotstxt
+
+The code chunk below will show the output from the [robotstxt package]() for the ISA bulletin available at: <https://bulletin.miamioh.edu/courses-instruction/isa/index.html  
+```{robotstxt}
+##Can you scrape this webpage or not? 
+robotstxt::paths_allowed(paths = "/courses-instruction/isa/", domain = "bulletin.miamioh.edu", bot = "*")
+```
+
+```{r wiki}
+
+robotstxt::paths_allowed(paths = "/wiki/Miami_RedHawks_football", domain = "en.wikipedia.org", bot = "*")
+
+#This one does allow scraping 
+
+```
+```{r indeed }
+robotstxt::paths_allowed(paths = "/jobs and /viewjob", domain = "www.indeed.com", bot = "*")
+#Also allows scraping we already know that linkedin does not based on notes 
+```
+In the example above the robots.txt response is inconsistent with what the webpage states. As a general bot, we are not allowed to scrape anything from linkedin. If you removed the slash after the .com the warning disappeared and we got a consistant result of false
+
+```{r}
+url = "https://en.wikipedia.org/wiki/Miami_RedHawks_football"
+robotstxt::paths_allowed(paths = "/wiki/Miami_RedHawks_football",
+                         domain = "en.wikipedia.org", bot = "*")
+page = rvest::read_html(url)
+items = page |> rvest::html_elements("table.wikitable")
+items |> rvest::html_attr("href")
+```
+
+## 'rvest' demo: ISA Course Bulletin 
+
+##[a] highligthed the course 
+##[b] right clicked and selected inspect 
+##[c] found the part that was flushed containing the title 
+##[d] right clicked and copied the selector 
+##[e] I saw that the output from the code below just got me the 24th course so I dropped the 
+
+```{r}
+isa_page_in_r = rvest::read_html("https://bulletin.miamioh.edu/courses-instruction/isa/")
+#Extract titles if all titles look the same on the page it means they have the same tag/class which would allow you to extract them in one step
+isa_page_in_r |>
+  rvest::html_elements("#sc_sccoursedescs > div > p.courseblocktitle >strong"
+  ) |> 
+  rvest::html_text2() -> isa_titles
+
+isa_page_in_r |> 
+  rvest::html_element(".courseeblockdesc") |>
+  rvest::html_text2() -> isa_descs
+
+isa_df = data.frame(
+  title = isa_titles, description = isa_descs
+)
+
+  
+```
+
+
