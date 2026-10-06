@@ -1,0 +1,235 @@
+---
+title: 'Assignment 07: Webscraping'
+author: "Natalie McGrath"
+date: "2026-10-06"
+output: 
+  html_document:
+    toc:TRUE 
+    toc_float: TRUE 
+    number_sections: TRUE 
+    code_download: TRUE 
+    code_folding: show 
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Check if scraping allowed
+```{r}
+robotstxt::paths_allowed(
+  paths = "/fsb/directory/",
+  domain = "miamioh.edu",
+  bot = "*"
+)
+```
+
+## Links to website
+```{r}
+# Department URLs
+urls = c(
+  "https://miamioh.edu/fsb/directory/?up=/query/all/all/Accountancy/all",
+  "https://miamioh.edu/fsb/directory/?up=/query/all/all/Economics/all",
+  "https://miamioh.edu/fsb/directory/?up=/query/all/all/Entrepreneurship/all",
+  "https://miamioh.edu/fsb/directory/?up=/query/all/all/Finance/all",
+  "https://miamioh.edu/fsb/directory/?up=/query/all/all/Information%20Systems%20--%20Analytics/all",
+  "https://miamioh.edu/fsb/directory/?up=/query/all/all/Marketing/all",
+  "https://miamioh.edu/fsb/directory/?up=/query/all/all/Management/all"
+)
+
+departments = c(
+  "Accountancy",
+  "Economics",
+  "Entrepreneurship",
+  "Finance",
+  "Information Systems & Analytics",
+  "Marketing",
+  "Management"
+)
+```
+
+## Scraping Data
+```{r}
+# Accountancy
+accountancy_url = "https://miamioh.edu/fsb/directory/?up=/query/all/all/Accountancy/all"
+accountancy_page = rvest::read_html(accountancy_url)
+
+accountancy_names = accountancy_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_text2()
+
+accountancy_positions = accountancy_page |>
+  rvest::html_elements("td i") |>
+  rvest::html_text2()
+
+accountancy_websites = accountancy_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_attr("href")
+
+accountancy_df = data.frame(
+  department = "Accountancy",
+  name = accountancy_names,
+  position = accountancy_positions,
+  website = accountancy_websites
+)
+
+
+# Economics
+economics_url = "https://miamioh.edu/fsb/directory/?up=/query/all/all/Economics/all"
+economics_page = rvest::read_html(economics_url)
+
+economics_names = economics_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_text2()
+
+economics_positions = economics_page |>
+  rvest::html_elements("td i") |>
+  rvest::html_text2()
+
+economics_websites = economics_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_attr("href")
+
+economics_df = data.frame(
+  department = "Economics",
+  name = economics_names,
+  position = economics_positions,
+  website = economics_websites
+)
+
+
+# Entrepreneurship
+entrepreneurship_url = "https://miamioh.edu/fsb/directory/?up=/query/all/all/Entrepreneurship/all"
+entrepreneurship_page = rvest::read_html(entrepreneurship_url)
+
+entrepreneurship_names = entrepreneurship_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_text2()
+
+entrepreneurship_positions = entrepreneurship_page |>
+  rvest::html_elements("td i") |>
+  rvest::html_text2()
+
+entrepreneurship_websites = entrepreneurship_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_attr("href")
+
+entrepreneurship_df = data.frame(
+  department = "Entrepreneurship",
+  name = entrepreneurship_names,
+  position = entrepreneurship_positions,
+  website = entrepreneurship_websites
+)
+
+
+# Finance
+finance_url = "https://miamioh.edu/fsb/directory/?up=/query/all/all/Finance/all"
+finance_page = rvest::read_html(finance_url)
+
+finance_names = finance_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_text2()
+
+finance_positions = finance_page |>
+  rvest::html_elements("td i") |>
+  rvest::html_text2()
+
+finance_websites = finance_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_attr("href")
+
+finance_df = data.frame(
+  department = "Finance",
+  name = finance_names,
+  position = finance_positions,
+  website = finance_websites
+)
+
+
+# ISA
+isa_url = "https://miamioh.edu/fsb/directory/?up=/query/all/all/Information%20Systems%20--%20Analytics/all"
+isa_page = rvest::read_html(isa_url)
+
+isa_names = isa_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_text2()
+
+isa_positions = isa_page |>
+  rvest::html_elements("td i") |>
+  rvest::html_text2()
+
+isa_websites = isa_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_attr("href")
+
+isa_df = data.frame(
+  department = "Information Systems & Analytics",
+  name = isa_names,
+  position = isa_positions,
+  website = isa_websites
+)
+
+
+# Marketing
+marketing_url = "https://miamioh.edu/fsb/directory/?up=/query/all/all/Marketing/all"
+marketing_page = rvest::read_html(marketing_url)
+
+marketing_names = marketing_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_text2()
+
+marketing_positions = marketing_page |>
+  rvest::html_elements("td i") |>
+  rvest::html_text2()
+
+marketing_websites = marketing_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_attr("href")
+
+marketing_df = data.frame(
+  department = "Marketing",
+  name = marketing_names,
+  position = marketing_positions,
+  website = marketing_websites
+)
+
+
+# Management
+management_url = "https://miamioh.edu/fsb/directory/?up=/query/all/all/Management/all"
+management_page = rvest::read_html(management_url)
+
+management_names = management_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_text2()
+
+management_positions = management_page |>
+  rvest::html_elements("td i") |>
+  rvest::html_text2()
+
+management_websites = management_page |>
+  rvest::html_elements("td strong a") |>
+  rvest::html_attr("href")
+
+management_df = data.frame(
+  department = "Management",
+  name = management_names,
+  position = management_positions,
+  website = management_websites
+)
+
+
+# Combine all 7 departments into data frame
+fsb_df = rbind(
+  accountancy_df,
+  economics_df,
+  entrepreneurship_df,
+  finance_df,
+  isa_df,
+  marketing_df,
+  management_df
+)
+
+
+head(fsb_df)
+```
